@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
+const bodyParser = require('body-parser');
 
 // Route files
 const authRoutes = require('./routes/authRoutes');
@@ -27,25 +28,36 @@ const corsOptions = {
 };
 
 // Apply CORS middleware
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 // Handle preflight requests
-app.options('*', cors(corsOptions));
+// app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(morgan('dev'));
 
 
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', 'https://swasthya-setu-nu.vercel.app');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    return res.status(200).end();
-  }
-  next();
-});
+// Body parser middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
+
+// app.use((req, res, next) => {
+//   if (req.method === 'OPTIONS') {
+//     res.header('Access-Control-Allow-Origin', 'https://swasthya-setu-nu.vercel.app');
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//     res.header('Access-Control-Allow-Credentials', 'true');
+//     return res.status(200).end();
+//   }
+//   next();
+// });
+
+app.use(cors({
+  origin: true, // Allow all origins (temporary)
+  credentials: true
+}));
 
 // Mount routers
 app.use('/api/auth', authRoutes);
