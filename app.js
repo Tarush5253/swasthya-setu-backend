@@ -16,14 +16,19 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: [
-    'https://swasthya-setu-nu.vercel.app',
-    'http://localhost:3000' // For local development
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
+// app.use(cors({
+//   origin: [
+//     'https://swasthya-setu-nu.vercel.app',
+//     'http://localhost:3000' // For local development
+//   ],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true
+// }));
+
+// In your backend
+app.options('*', cors()); // Enable preflight for all routes
+
+
 app.use(express.json());
 app.use(morgan('dev'));
 
