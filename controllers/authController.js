@@ -2,6 +2,8 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const Hospital = require("../models/Hospital");
+const BloodBank = require("../models/BloodBank");
 
 exports.register = async (req, res) => {
   try {
