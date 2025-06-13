@@ -15,29 +15,35 @@ connectDB();
 
 const app = express();
 
-// Middleware
-// app.use(cors({
-//   origin: [
-//     'https://swasthya-setu-nu.vercel.app',
-//     'http://localhost:3000' // For local development
-//   ],
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   credentials: true
-// }));
 
-// In your backend
-app.options('*', cors()); // Enable preflight for all routes
+const corsOptions = {
+  origin: [
+    'https://swasthya-setu-nu.vercel.app',
+    'http://localhost:3000' // Include localhost for development
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
 
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.use(function (req, res, next) {
 
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', 'https://swasthya-setu-nu.vercel.app');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    return res.status(200).end();
+  }
   next();
 });
 
