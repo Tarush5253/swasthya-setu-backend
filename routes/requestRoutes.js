@@ -9,6 +9,9 @@ router.use(auth.protect);
 router.get('/bed-requests', requestController.getUserBedRequests);
 router.get('/blood-requests', requestController.getUserBloodRequests);
 
+
+router.post('/:hospitalId', auth.protect, requestController.createBedRequest);
+
 router.get('/hospital-bed-requests', auth.protect , auth.authorize('hospital_admin'), requestController.getHospitalBedRequests)
 
 router.patch('/bed-requests/:id', auth.authorize('hospital_admin'), requestController.updateBedRequestStatus);

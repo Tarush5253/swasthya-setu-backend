@@ -22,7 +22,7 @@ exports.getHospitalBedRequests = async (req, res) => {
     if (!hospital) {
       res.status(404).json({ message: "hospital not found" });
     }
-    const requests = await BedRequest.find({ hospital });
+    const requests = await BedRequest.find({ hospital});
     console.log(requests)
     res.json(requests);
   } catch (err) {
@@ -40,6 +40,41 @@ exports.getUserBloodRequests = async (req, res) => {
     res.json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.createBedRequest = async (req, res) => {
+  try {
+    const { patientName, patientAge, patientGender, contactNumber, bedType, priority, medicalCondition } = req.body;
+    const { hospitalId } = req.params;
+    const userId = req.user._id;
+
+    const newRequest = new BedRequest({
+      patientName,
+      patientAge,
+      patientGender,
+      contactNumber,
+      bedType,
+      priority,
+      medicalCondition,
+      hospital: hospitalId,
+      user: userId,
+      status: 'Pending'
+    });
+
+    const savedRequest = await newRequest.save();
+    res.status(201).json({
+      success: true,
+      data: savedRequest,
+      message: 'Bed request submitted successfully'
+    });
+  } catch (error) {
+    console.error('Error creating bed request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit bed request',
+      error: error.message
+    });
   }
 };
 
