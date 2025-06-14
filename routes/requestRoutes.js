@@ -20,4 +20,10 @@ router.get('/hospital-blood-requests', auth.protect , auth.authorize('bloodbank_
 router.patch('/bed-requests/:id', auth.authorize('hospital_admin'), requestController.updateBedRequestStatus);
 router.patch('/blood-requests/:id', auth.authorize('bloodbank_admin'), requestController.updateBloodRequestStatus);
 
+// Get combined request history
+router.get('/history', auth.protect, requestController.getUserRequestHistory);
+
+// Get specific request details
+router.get('/:type(blood|bed)/:requestId', auth.protect, requestController.getRequestDetails);
+
 module.exports = router;

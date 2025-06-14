@@ -171,3 +171,93 @@ exports.updateBloodRequestStatus = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getUserRequestHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    // Fetch requests in parallel
+    const [bloodRequests, bedRequests] = await Promise.all([
+      BloodRequest.find({ user: userId })
+        .populate('bloodBank', 'name location')
+        .sort({ createdAt: -1 })
+        .lean(),
+      BedRequest.find({ user: userId })
+        .populate('hospital', 'name location')
+        .sort({ timestamp: -1 })
+        .lean()
+    ]);
+
+    // Transform and combine requests
+    const combinedRequests = [
+      ...bloodRequests.map(r => ({
+        ...r,
+        type: 'blood',
+        date: r.createdAt,
+        location: r.hospitalName || r.bloodBank?.name,
+        description: `Blood (${r.bloodGroup}) - ${r.units} units`
+      })),
+      ...bedRequests.map(r => ({
+        ...r,
+        type: 'bed',
+        date: r.timestamp,
+        location: r.hospital?.name,
+        description: `${r.bedType} Bed`
+      }))
+    ].sort((a, b) => b.date - a.date);
+
+    res.status(200).json({
+      success: true,
+      data: combinedRequests
+    });
+  } catch (error) {
+    console.error('Error fetching request history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch request history'
+    });
+  }
+};
+
+// Get single request details
+exports.getRequestDetails = async (req, res) => {
+  try {
+    const { requestId, type } = req.params;
+    const userId = req.user._id;
+
+    let request;
+    if (type === 'blood') {
+      request = await BloodRequest.findOne({ _id: requestId, user: userId })
+        .populate('bloodBank', 'name location contact');
+    } else if (type === 'bed') {
+      request = await BedRequest.findOne({ _id: requestId, user: userId })
+        .populate('hospital', 'name location contact');
+    } else {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid request type' 
+      });
+    }
+
+    if (!request) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Request not found or unauthorized' 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...request.toObject(),
+        type
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching request details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch request details'
+    });
+  }
+};
