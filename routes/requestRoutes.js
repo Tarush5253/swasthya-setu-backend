@@ -15,6 +15,7 @@ router.post('/:hospitalId', auth.protect, requestController.createBedRequest);
 router.post('/blood-requests/:bloodBankId', auth.protect, requestController.createBloodRequest);
 
 router.get('/hospital-bed-requests', auth.protect , auth.authorize('hospital_admin'), requestController.getHospitalBedRequests)
+router.get('/hospital-blood-requests', auth.protect , auth.authorize('bloodbank_admin'), requestController.getHospitalBloodRequests)
 
 router.patch('/bed-requests/:id', auth.authorize('hospital_admin'), requestController.updateBedRequestStatus);
 router.patch('/blood-requests/:id', auth.authorize('bloodbank_admin'), requestController.updateBloodRequestStatus);

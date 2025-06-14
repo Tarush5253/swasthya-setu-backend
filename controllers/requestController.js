@@ -2,6 +2,7 @@
 const BedRequest = require("../models/BedRequest");
 const BloodRequest = require("../models/BloodRequest");
 const Hospital = require("../models/Hospital");
+const BloodBank = require("../models/BloodBank")
 
 exports.getUserBedRequests = async (req, res) => {
   try {
@@ -39,6 +40,22 @@ exports.getUserBloodRequests = async (req, res) => {
     );
     res.json(requests);
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getHospitalBloodRequests = async (req, res) => {
+  try {
+    const bloodBank = await BloodBank.find({ admin: req.user.id });
+
+    if (!bloodBank) {
+      res.status(404).json({ message: "BloodBank not found" });
+    }
+    const requests = await BloodRequest.find({ bloodBank});
+    console.log(requests)
+    res.json(requests);
+  } catch (err) {
+    console.log(err)
     res.status(500).json({ message: err.message });
   }
 };
