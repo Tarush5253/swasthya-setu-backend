@@ -2,16 +2,16 @@
 const express = require('express');
 const router = express.Router();
 const hospitalController = require('../controllers/hospitalController');
-const auth = require('../middleware/auth');
+const {protect, authorize} = require('../middleware/auth');
 
 router.get('/', hospitalController.getAllHospitals);
 router.get('/:id', hospitalController.getHospitalById);
 
-router.use(auth.protect);
+router.use(protect);
 
-router.post('/:hospitalId/requests', auth.authorize('user'), hospitalController.createBedRequest);
-router.get('/:hospitalId/requests', auth.authorize('hospital_admin'), hospitalController.getHospitalRequests);
+router.post('/:hospitalId/requests', authorize('user'), hospitalController.createBedRequest);
+router.get('/:hospitalId/requests', authorize('hospital_admin'), hospitalController.getHospitalRequests);
 
-router.patch('/:id/beds', auth.authorize('hospital_admin'), hospitalController.updateBedAvailability);
+router.put('/:id/beds', protect, authorize('hospital_admin'), hospitalController.updateBedAvailability);
 
 module.exports = router;

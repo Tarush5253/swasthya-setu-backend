@@ -81,3 +81,47 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+exports.verify = async (req, res) => {
+  try {
+    // The token is already verified by the auth middleware
+    const user = await User.findById(req.user.id)
+      .select('-password') // Exclude password field
+      .lean(); // Convert to plain JavaScript object
+
+    console.log(user)
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: "User not found",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    // If user is a hospital admin, populate hospital info
+    // if (user.role === 'hospital_admin' && user.hospitalInfo) {
+    //   const hospital = await Hospital.findOne({ name: user.hospitalInfo.name , location:user.hospitalInfo.location , contact : user.hospitalInfo.contact}).lean();
+    //   user.hospitalInfo = hospital;
+    // }
+
+    // If user is a blood bank admin, populate blood bank info
+    // if (user.role === 'bloodbank_admin' && user.bloodBankInfo) {
+    //   const bloodBank = await BloodBank.findById(user.bloodBankInfo).lean();
+    //   user.bloodBankInfo = bloodBank;
+    // }
+
+    res.json({ 
+      success: true,
+      user 
+    });
+  } catch (err) {
+    console.error("Token verification error:", err);
+    res.status(500).json({ 
+      success: false,
+      error: "Internal server error",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
