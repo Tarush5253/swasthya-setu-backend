@@ -1,6 +1,8 @@
 // File: backend/controllers/bloodBankController.js
+const { default: mongoose } = require('mongoose');
 const BloodBank = require('../models/BloodBank');
 const BloodRequest = require('../models/BloodRequest');
+const User = require('../models/User');
 
 exports.getAllBloodBanks = async (req, res) => {
     try {
@@ -21,19 +23,93 @@ exports.getBloodBankById = async (req, res) => {
     }
 };
 
+// In your bloodBankController.js
 exports.updateBloodStock = async (req, res) => {
-    try {
-        const { stock } = req.body;
-        const bloodBank = await BloodBank.findByIdAndUpdate(
-            req.params.id,
-            { stock },
-            { new: true }
-        );
-        res.json(bloodBank);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { stock } = req.body;
+    const adminId = req.params.id;
+
+    // Validate input
+    if (!stock || !adminId) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Missing required fields" });
     }
+
+    // 1. Update BloodBank stock
+    const bloodBank = await BloodBank.findOneAndUpdate(
+      { admin: adminId },
+      { 
+         $set: {
+          "stock.A_pos": stock["A+"],
+          "stock.A_neg": stock["A-"],
+          "stock.B_pos": stock["B+"],
+          "stock.B_neg": stock["B-"],
+          "stock.AB_pos": stock["AB+"],
+          "stock.AB_neg": stock["AB-"],
+          "stock.O_pos": stock["O+"],
+          "stock.O_neg": stock["O-"],
+        },
+       },
+      { new: true, session }
+    );
+
+    console.log(bloodBank)
+    if (!bloodBank) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Blood bank not found for this admin" });
+    }
+
+    // 2. Update the associated admin user's bloodBankInfo
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: adminId, role: "bloodbank_admin" },
+      {
+        $set: {
+          "bloodBankInfo.stock.A_pos": stock["A+"],
+          "bloodBankInfo.stock.A_neg": stock["A-"],
+          "bloodBankInfo.stock.B_pos": stock["B+"],
+          "bloodBankInfo.stock.B_neg": stock["B-"],
+          "bloodBankInfo.stock.AB_pos": stock["AB+"],
+          "bloodBankInfo.stock.AB_neg": stock["AB-"],
+          "bloodBankInfo.stock.O_pos": stock["O+"],
+          "bloodBankInfo.stock.O_neg": stock["O-"],
+        },
+      },
+      { new: true, session }
+    );
+
+    if (!updatedUser) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Admin user not found or not authorized" });
+    }
+
+    await session.commitTransaction();
+    res.json({
+      success: true,
+      bloodBank: {
+        id: bloodBank._id,
+        stock: bloodBank.stock
+      },
+      user: {
+        id: updatedUser._id,
+        bloodBankInfo: updatedUser.bloodBankInfo
+      }
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    console.error('Error in updateBloodStock:', err);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  } finally {
+    session.endSession();
+  }
 };
+
 
 exports.createBloodRequest = async (req, res) => {
     try {

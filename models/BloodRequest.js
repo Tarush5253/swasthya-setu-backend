@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 
 const BloodRequestSchema = new mongoose.Schema({
     patientName: { type: String, required: true },
-    age: { type: Number, required: true },
-    gender: { type: String, required: true },
-    contact: { type: String, required: true },
+    patientAge: { type: Number, required: true },
+    patientGender: { type: String, required: true },
+    contactNumber: { type: String, required: true },
     bloodGroup: { type: String, required: true },
     units: { type: Number, required: true },
-    reason: { type: String, required: true },
+    purpose: { type: String, required: true },
     priority: { type: String, required: true },
     hospitalName: { type: String, required: true },
     status: { type: String, default: 'Pending' },

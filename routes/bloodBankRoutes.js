@@ -12,6 +12,6 @@ router.use(auth.protect);
 router.post('/:bloodBankId/requests', auth.authorize('user'), bloodBankController.createBloodRequest);
 router.get('/:bloodBankId/requests', auth.authorize('bloodbank_admin'), bloodBankController.getBloodBankRequests);
 
-router.patch('/:id/stock', auth.authorize('bloodbank_admin'), bloodBankController.updateBloodStock);
+router.patch('/:id/stock', auth.protect, auth.authorize('bloodbank_admin'), bloodBankController.updateBloodStock);
 
 module.exports = router;

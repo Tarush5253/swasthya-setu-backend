@@ -78,6 +78,55 @@ exports.createBedRequest = async (req, res) => {
   }
 };
 
+exports.createBloodRequest = async (req, res) => {
+  try {
+    const {
+      patientName,
+      patientAge,
+      patientGender,
+      contactNumber,
+      bloodGroup,
+      units,
+      purpose,
+      priority,
+      hospitalName
+    } = req.body;
+    
+    const { bloodBankId } = req.params;
+    const userId = req.user._id;
+
+    const newRequest = new BloodRequest({
+      patientName,
+      patientAge,
+      patientGender,
+      contactNumber,
+      bloodGroup,
+      units,
+      purpose,
+      priority,
+      hospitalName,
+      bloodBank: bloodBankId,
+      user: userId,
+      status: 'Pending'
+    });
+
+    const savedRequest = await newRequest.save();
+    
+    res.status(201).json({
+      success: true,
+      data: savedRequest,
+      message: 'Blood request submitted successfully'
+    });
+  } catch (error) {
+    console.error('Error creating blood request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit blood request',
+      error: error.message
+    });
+  }
+};
+
 exports.updateBedRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
